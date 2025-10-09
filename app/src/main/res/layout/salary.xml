@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_light"
+    android:padding="16dp">
+
+    <!-- Tiêu đề -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tổng hợp lương tháng"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_primary"
+        android:layout_gravity="center_horizontal"
+        android:paddingBottom="12dp"/>
+
+    <TextView
+        android:id="@+id/tvTotalShifts"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tổng số ca: "/>
+
+    <TextView
+        android:id="@+id/tvTotalHoursMonth"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tổng số giờ làm thường: "/>
+
+    <TextView
+        android:id="@+id/tvTotalOvertimeHoursMonth"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tổng số giờ tăng ca: "/>
+
+    <TextView
+        android:id="@+id/tvBaseSalary"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Lương ca thường: "/>
+
+    <TextView
+        android:id="@+id/tvOvertimeSalary"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Lương OT: "/>
+
+    <TextView
+        android:id="@+id/tvTotalSalary"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tổng lương: "
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:layout_marginTop="8dp"/>
+</LinearLayout>
+  

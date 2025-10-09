@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/main"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/white"
+    android:padding="16dp">
+
+    <!-- Tiêu đề -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Đăng ký ca làm"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/black"
+        android:layout_gravity="center_horizontal"
+        android:paddingBottom="8dp"/>
+
+    <!-- Lịch tháng -->
+    <CalendarView
+        android:id="@+id/calendarView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- Form chọn ca, ẩn lúc đầu -->
+    <LinearLayout
+        android:id="@+id/layoutShift"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone"
+        android:padding="12dp"
+        android:background="@android:color/darker_gray">
+
+        <TextView
+            android:id="@+id/tvSelectedDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Ngày dd/MM/yyyy"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:textColor="@android:color/black"
+            android:layout_marginBottom="8dp"/>
+
+        <CheckBox
+            android:id="@+id/shiftMorning"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Ca sáng (7h30 - 12h30)" />
+
+        <CheckBox
+            android:id="@+id/shiftAfternoon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Ca chiều (12h30 - 17h30)" />
+
+        <CheckBox
+            android:id="@+id/shiftEvening"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Ca tối (17h30 - 22h30)" />
+
+        <Button
+            android:id="@+id/btnConfirmShift"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Xác nhận đăng ký"
+            android:layout_marginTop="12dp"/>
+
+        <Button
+            android:id="@+id/btnRegisterOT"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Đăng ký OT"
+            android:layout_marginTop="8dp"/>
+    </LinearLayout>
+</LinearLayout>
