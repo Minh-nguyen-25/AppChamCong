@@ -13,7 +13,7 @@
 
         <!-- Đặt activity khởi chạy ở đây -->
         <activity
-            android:name=".RegisterShiftActivity"
+            android:name=".LoginActivity"
             android:exported="true">   <!-- BẮT BUỘC -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -23,7 +23,7 @@
 
         <!-- LoginActivity -->
         <activity
-            android:name=".LoginActivity"
+            android:name=".RegisterShiftActivity"
             android:exported="false" />
 
         <!-- MainActivity -->
@@ -31,6 +31,9 @@
             android:name=".MainActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".SalaryActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

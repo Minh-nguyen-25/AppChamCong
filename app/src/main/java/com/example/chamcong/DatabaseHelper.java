@@ -1,15 +1,17 @@
 
 package com.example.chamcong;
 
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     // Tên và phiên bản của Database
-    private static final String DATABASE_NAME = "ChamCongPro.db";
-    private static final int DATABASE_VERSION = 1;
+    private static final String DATABASE_NAME = "ChamCong.db";
+    private static final int DATABASE_VERSION = 3;
 
     // --- BẢNG USERS ---
     public static final String TABLE_USERS = "users";
@@ -49,6 +51,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             COLUMN_FULL_NAME + " TEXT, " +
             COLUMN_POSITION + " TEXT);";
 
+
+
     // Tạo bảng Schedules
     private static final String CREATE_TABLE_SCHEDULES = "CREATE TABLE " + TABLE_SCHEDULES + " (" +
             COLUMN_SCHEDULE_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -80,6 +84,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_TABLE_USERS);
         db.execSQL(CREATE_TABLE_SCHEDULES);
         db.execSQL(CREATE_TABLE_ATTENDANCES);
+
+        // Thêm các người dùng mặc định để kiểm tra đăng nhập
+        addDefaultUsers(db);
     }
 
     @Override
@@ -90,4 +97,57 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_USERS);
         onCreate(db);
     }
+
+    // Thêm các người dùng mặc định
+    private void addDefaultUsers(SQLiteDatabase db) {
+        // --- Người dùng 1 ---
+        ContentValues values1 = new ContentValues();
+        values1.put(COLUMN_USERNAME, "0123456789");
+        values1.put(COLUMN_PASSWORD, "12345");
+        values1.put(COLUMN_FULL_NAME, "Test User");
+        values1.put(COLUMN_POSITION, "Nhân viên");
+        db.insert(TABLE_USERS, null, values1);
+
+        // --- Người dùng 2 (Tài khoản bạn yêu cầu) ---
+        ContentValues values2 = new ContentValues();
+        values2.put(COLUMN_USERNAME, "0356897098");
+        values2.put(COLUMN_PASSWORD, "12345");
+        values2.put(COLUMN_FULL_NAME, "Nhân Viên Mới");
+        values2.put(COLUMN_POSITION, "Nhân viên");
+        db.insert(TABLE_USERS, null, values2);
+    }
+
+    // ======================== CHỖ TÔI ĐÃ SỬA ========================
+    /**
+     * Kiểm tra thông tin đăng nhập và lấy ID của người dùng.
+     * Thay vì trả về true/false, hàm này trả về ID của người dùng nếu thành công.
+     * @param username Tên đăng nhập (SĐT)
+     * @param password Mật khẩu
+     * @return ID (kiểu long) của người dùng nếu đăng nhập thành công, -1 nếu thất bại.
+     */
+    public long checkUserAndGetId(String username, String password) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        long userId = -1; // Giá trị mặc định nếu không tìm thấy user
+
+        String[] columns = {COLUMN_USER_ID};
+        String selection = COLUMN_USERNAME + " = ? AND " + COLUMN_PASSWORD + " = ?";
+        String[] selectionArgs = {username, password};
+
+        Cursor cursor = db.query(TABLE_USERS, columns, selection, selectionArgs, null, null, null);
+
+        // Nếu con trỏ có thể di chuyển đến hàng đầu tiên, nghĩa là tìm thấy người dùng
+        if (cursor.moveToFirst()) {
+            // Lấy ID từ cột COLUMN_USER_ID.
+            // getColumnIndexOrThrow sẽ báo lỗi nếu tên cột không tồn tại, giúp phát hiện lỗi sớm.
+            userId = cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_USER_ID));
+        }
+
+        // Đóng con trỏ và database để giải phóng tài nguyên
+        cursor.close();
+        db.close();
+
+        // Trả về ID người dùng, hoặc -1 nếu không tìm thấy
+        return userId;
+    }
+    // ===============================================================
 }

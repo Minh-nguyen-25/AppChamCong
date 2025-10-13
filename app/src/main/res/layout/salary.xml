@@ -1,59 +1,221 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_light"
-    android:padding="16dp">
+    android:background="#FFFFFF">
 
-    <!-- Tiêu đề -->
-    <TextView
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Tổng hợp lương tháng"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:textColor="@color/text_primary"
-        android:layout_gravity="center_horizontal"
-        android:paddingBottom="12dp"/>
+        android:orientation="vertical"
+        android:padding="16dp">
 
-    <TextView
-        android:id="@+id/tvTotalShifts"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Tổng số ca: "/>
+        <!-- Thanh tiêu đề với nút trở về -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
 
-    <TextView
-        android:id="@+id/tvTotalHoursMonth"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Tổng số giờ làm thường: "/>
+            <Button
+                android:id="@+id/btnBack"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="← Trở về"
+                android:backgroundTint="#2196F3"
+                android:textColor="#FFFFFF"
+                android:padding="8dp"
+                android:layout_marginEnd="10dp" />
 
-    <TextView
-        android:id="@+id/tvTotalOvertimeHoursMonth"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Tổng số giờ tăng ca: "/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tổng hợp lương tháng"
+                android:textStyle="bold"
+                android:textSize="18sp"
+                android:textColor="#000000" />
+        </LinearLayout>
 
-    <TextView
-        android:id="@+id/tvBaseSalary"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Lương ca thường: "/>
+        <!-- Chọn tháng và năm xem lương -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="20dp">
 
-    <TextView
-        android:id="@+id/tvOvertimeSalary"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Lương OT: "/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Chọn tháng:"
+                android:textSize="16sp"
+                android:layout_marginEnd="10dp" />
 
-    <TextView
-        android:id="@+id/tvTotalSalary"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Tổng lương: "
-        android:textStyle="bold"
-        android:textSize="16sp"
-        android:layout_marginTop="8dp"/>
-</LinearLayout>
-  
+            <Spinner
+                android:id="@+id/spnMonth"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:entries="@array/months_array" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="  Năm:"
+                android:textSize="16sp"
+                android:layout_marginStart="10dp" />
+
+            <Spinner
+                android:id="@+id/spnYear"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:entries="@array/years_array" />
+        </LinearLayout>
+
+        <!-- Nội dung lương -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="20dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Tổng số ca:"
+                android:textSize="16sp"
+                android:layout_marginTop="8dp" />
+
+            <EditText
+                android:id="@+id/edtongsoca"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="2"
+                android:text="0"
+                android:inputType="numberDecimal"
+                android:background="@drawable/day_background" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="20dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Giờ làm thường:"
+                android:textSize="16sp"
+                android:layout_marginTop="8dp" />
+
+            <EditText
+                android:id="@+id/edgiolamthuong"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="2"
+                android:text="0"
+                android:inputType="numberDecimal"
+                android:background="@drawable/day_background" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="20dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Giờ tăng ca:"
+                android:textSize="16sp"
+                android:layout_marginTop="8dp" />
+
+            <EditText
+                android:id="@+id/edgiotangca"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="2"
+                android:text="0"
+                android:inputType="numberDecimal"
+                android:background="@drawable/day_background" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="20dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Lương ca thường:"
+                android:textSize="16sp"
+                android:layout_marginTop="8dp" />
+
+            <EditText
+                android:id="@+id/edluongcathuong"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="2"
+                android:text="0"
+                android:inputType="numberDecimal"
+                android:background="@drawable/day_background" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="20dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Lương tăng ca:"
+                android:textSize="16sp"
+                android:layout_marginTop="8dp" />
+
+            <EditText
+                android:id="@+id/edluongtangca"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="2"
+                android:text="0"
+                android:inputType="numberDecimal"
+                android:background="@drawable/day_background" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="20dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Tổng lương:"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:layout_marginTop="8dp" />
+
+            <EditText
+                android:id="@+id/edtongluong"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="2"
+                android:text="0"
+                android:inputType="numberDecimal"
+                android:background="@drawable/day_background" />
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>
