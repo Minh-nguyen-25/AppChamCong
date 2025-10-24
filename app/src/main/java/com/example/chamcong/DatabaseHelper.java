@@ -1,4 +1,3 @@
-
 package com.example.chamcong;
 
 import android.content.ContentValues;
@@ -6,73 +5,50 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 
-    // Tên và phiên bản của Database
+    // --- THÔNG TIN DB ---
     private static final String DATABASE_NAME = "ChamCong.db";
-    private static final int DATABASE_VERSION = 3;
+    private static final int DATABASE_VERSION = 4; // ✅ Tăng version lên để tránh lỗi downgrade
 
-    // --- BẢNG USERS ---
-    public static final String TABLE_USERS = "users";
-    public static final String COLUMN_USER_ID = "_id";
-    public static final String COLUMN_USERNAME = "username";
-    public static final String COLUMN_PASSWORD = "password";
-    public static final String COLUMN_FULL_NAME = "full_name";
-    public static final String COLUMN_POSITION = "position";
+    // --- BẢNG NHÂN VIÊN ---
+    public static final String TABLE_NHANVIEN = "NhanVien";
+    public static final String NV_ID = "manv";
+    public static final String NV_HOTEN = "hoTen";
+    public static final String NV_NGAYSINH = "ngaySinh";
+    public static final String NV_CHUCVU = "chucVu";
+    public static final String NV_MUCLUONG = "mucLuong";
+    public static final String NV_SDT = "soDienThoai";
+    public static final String NV_LOAI = "loai";
+    public static final String NV_MATKHAU = "matKhau";
 
-    // --- BẢNG SCHEDULES (Lịch làm việc đã đăng ký) ---
-    public static final String TABLE_SCHEDULES = "schedules";
-    public static final String COLUMN_SCHEDULE_ID = "_id";
-    public static final String COLUMN_SCHEDULE_NAME = "schedule_name";
-    public static final String COLUMN_START_TIME = "start_time";
-    public static final String COLUMN_END_TIME = "end_time";
-    public static final String COLUMN_WORK_DATE = "work_date";
+    // --- BẢNG CA LÀM ---
+    public static final String TABLE_CALAM = "CaLam";
+    public static final String CL_ID = "id";
+    public static final String CL_MANV = "manv";
+    public static final String CL_NGAY = "ngay";
+    public static final String CL_CA = "ca";
+    public static final String CL_OT = "ot";
+    public static final String CL_CHECKIN = "checkIn";
+    public static final String CL_CHECKOUT = "checkOut";
+    public static final String CL_MUON = "checkInMuon";
+    public static final String CL_SOM = "checkOutSom";
+    public static final String CL_NGHI = "nghiDuocKhong";
 
-
-    // --- BẢNG ATTENDANCES (Lịch sử chấm công thực tế) ---
-    public static final String TABLE_ATTENDANCES = "attendances";
-    public static final String COLUMN_ATTENDANCE_ID = "_id";
-    public static final String COLUMN_ATT_USER_ID = "user_id"; // Foreign Key
-    public static final String COLUMN_ATT_SCHEDULE_ID = "schedule_id"; // Foreign Key, nullable
-    public static final String COLUMN_CHECK_IN_TIME = "check_in_time";
-    public static final String COLUMN_CHECK_OUT_TIME = "check_out_time";
-    public static final String COLUMN_TOTAL_SALARY = "total_salary";
-    public static final String COLUMN_STATUS = "status";
-
-
-    // --- CÂU LỆNH TẠO BẢNG ---
-
-    // Tạo bảng Users
-    private static final String CREATE_TABLE_USERS = "CREATE TABLE " + TABLE_USERS + " (" +
-            COLUMN_USER_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-            COLUMN_USERNAME + " TEXT UNIQUE NOT NULL, " +
-            COLUMN_PASSWORD + " TEXT NOT NULL, " +
-            COLUMN_FULL_NAME + " TEXT, " +
-            COLUMN_POSITION + " TEXT);";
-
-
-
-    // Tạo bảng Schedules
-    private static final String CREATE_TABLE_SCHEDULES = "CREATE TABLE " + TABLE_SCHEDULES + " (" +
-            COLUMN_SCHEDULE_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-            COLUMN_SCHEDULE_NAME + " TEXT NOT NULL, " +
-            COLUMN_START_TIME + " TEXT NOT NULL, " +
-            COLUMN_END_TIME + " TEXT NOT NULL, " +
-            COLUMN_WORK_DATE + " TEXT NOT NULL);";
-
-    // Tạo bảng Attendances
-    private static final String CREATE_TABLE_ATTENDANCES = "CREATE TABLE " + TABLE_ATTENDANCES + " (" +
-            COLUMN_ATTENDANCE_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-            COLUMN_ATT_USER_ID + " INTEGER NOT NULL, " +
-            COLUMN_ATT_SCHEDULE_ID + " INTEGER, " +
-            COLUMN_CHECK_IN_TIME + " INTEGER, " +
-            COLUMN_CHECK_OUT_TIME + " INTEGER, " +
-            COLUMN_TOTAL_SALARY + " REAL, " +
-            COLUMN_STATUS + " TEXT, " +
-            "FOREIGN KEY(" + COLUMN_ATT_USER_ID + ") REFERENCES " + TABLE_USERS + "(" + COLUMN_USER_ID + "), " +
-            "FOREIGN KEY(" + COLUMN_ATT_SCHEDULE_ID + ") REFERENCES " + TABLE_SCHEDULES + "(" + COLUMN_SCHEDULE_ID + "));";
-
+    // --- BẢNG TỔNG HỢP ---
+    public static final String TABLE_TONGHOP = "TongHop";
+    public static final String TH_ID = "id";
+    public static final String TH_MANV = "manv";
+    public static final String TH_THANG = "thang";
+    public static final String TH_GIOLAM = "gioLamThuong";
+    public static final String TH_GIOOT = "gioTangCa";
+    public static final String TH_MUON = "phutMuon";
+    public static final String TH_SOM = "phutSom";
+    public static final String TH_NGAYLAM = "ngayLam";
+    public static final String TH_NGAYNGHI = "ngayNghiCoLuong";
+    public static final String TH_LUONG = "luong";
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -80,74 +56,157 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        // Thực thi các câu lệnh để tạo bảng
-        db.execSQL(CREATE_TABLE_USERS);
-        db.execSQL(CREATE_TABLE_SCHEDULES);
-        db.execSQL(CREATE_TABLE_ATTENDANCES);
 
-        // Thêm các người dùng mặc định để kiểm tra đăng nhập
-        addDefaultUsers(db);
+        // BẢNG NHÂN VIÊN
+        db.execSQL("CREATE TABLE " + TABLE_NHANVIEN + " (" +
+                NV_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                NV_HOTEN + " TEXT NOT NULL, " +
+                NV_NGAYSINH + " TEXT, " +
+                NV_CHUCVU + " TEXT, " +
+                NV_MUCLUONG + " REAL NOT NULL, " +
+                NV_SDT + " TEXT, " +
+                NV_LOAI + " TEXT CHECK(" + NV_LOAI + " IN ('fulltime','parttime')), " +
+                NV_MATKHAU + " TEXT NOT NULL)");
+
+        // BẢNG CA LÀM
+        db.execSQL("CREATE TABLE " + TABLE_CALAM + " (" +
+                CL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                CL_MANV + " INTEGER NOT NULL, " +
+                CL_NGAY + " TEXT NOT NULL, " +
+                CL_CA + " TEXT CHECK(" + CL_CA + " IN ('8h30-13h','13h-17h30','17h30-22h')), " +
+                CL_OT + " INTEGER DEFAULT 0, " +
+                CL_CHECKIN + " INTEGER, " +
+                CL_CHECKOUT + " INTEGER, " +
+                CL_MUON + " INTEGER DEFAULT 0, " +
+                CL_SOM + " INTEGER DEFAULT 0, " +
+                CL_NGHI + " INTEGER DEFAULT 0, " +
+                "FOREIGN KEY(" + CL_MANV + ") REFERENCES " + TABLE_NHANVIEN + "(" + NV_ID + "))");
+
+        // BẢNG TỔNG HỢP
+        db.execSQL("CREATE TABLE " + TABLE_TONGHOP + " (" +
+                TH_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                TH_MANV + " INTEGER NOT NULL, " +
+                TH_THANG + " TEXT NOT NULL, " +
+                TH_GIOLAM + " REAL DEFAULT 0, " +
+                TH_GIOOT + " REAL DEFAULT 0, " +
+                TH_MUON + " INTEGER DEFAULT 0, " +
+                TH_SOM + " INTEGER DEFAULT 0, " +
+                TH_NGAYLAM + " INTEGER DEFAULT 0, " +
+                TH_NGAYNGHI + " INTEGER DEFAULT 0, " +
+                TH_LUONG + " REAL DEFAULT 0, " +
+                "FOREIGN KEY(" + TH_MANV + ") REFERENCES " + TABLE_NHANVIEN + "(" + NV_ID + "))");
+        insertSampleData(db);
+    }
+
+    // 🟢 Hàm thêm dữ liệu mẫu
+    private void insertSampleData(SQLiteDatabase db) {
+        // 1️⃣ Bảng NhanVien
+        db.execSQL("INSERT INTO " + TABLE_NHANVIEN +
+                " (" + NV_HOTEN + ", " + NV_NGAYSINH + ", " + NV_CHUCVU + ", " + NV_MUCLUONG + ", " + NV_SDT + ", " + NV_LOAI + ", " + NV_MATKHAU + ") VALUES " +
+                "('Nguyen Van A', '1995-01-10', 'Quản lý', 13000000, '0901234567', 'fulltime', '123456')," +
+                "('Tran Thi B', '1998-05-22', 'Nhân viên bán hàng', 40000, '0902234567', 'parttime', '111111')," +
+                "('Le Van C', '1990-09-13', 'Bảo vệ', 10000000, '0903234567', 'fulltime', '222222')," +
+                "('Pham Thi D', '1997-03-19', 'Thu ngân', 9000000, '0904234567', 'fulltime', '333333')," +
+                "('Hoang Van E', '2000-07-01', 'Phục vụ', 35000, '0905234567', 'parttime', '444444')");
+
+        // 2️⃣ Bảng CaLam (mỗi người 1 ca mẫu)
+        db.execSQL("INSERT INTO " + TABLE_CALAM +
+                " (" + CL_MANV + ", " + CL_NGAY + ", " + CL_CA + ", " + CL_OT + ", " + CL_CHECKIN + ", " + CL_CHECKOUT + ", " + CL_MUON + ", " + CL_SOM + ", " + CL_NGHI + ") VALUES " +
+                "(1, '2025-10-20', '8h30-13h', 1, 830, 1300, 0, 0, 0)," +
+                "(2, '2025-10-20', '13h-17h30', 0, 1310, 1730, 10, 0, 0)," +
+                "(3, '2025-10-20', '17h30-22h', 0, 1730, 2200, 0, 0, 0)," +
+                "(4, '2025-10-20', '8h30-13h', 1, 830, 1330, 0, 0, 0)," +
+                "(5, '2025-10-20', '13h-17h30', 0, 1330, 1730, 0, 0, 0)");
+
+        // 3️⃣ Bảng TongHop
+        db.execSQL("INSERT INTO " + TABLE_TONGHOP +
+                " (" + TH_MANV + ", " + TH_THANG + ", " + TH_GIOLAM + ", " + TH_GIOOT + ", " + TH_MUON + ", " + TH_SOM + ", " + TH_NGAYLAM + ", " + TH_NGAYNGHI + ", " + TH_LUONG + ") VALUES " +
+                "(1, '2025-10', 160, 10, 20, 10, 26, 2, 13500000)," +
+                "(2, '2025-10', 120, 5, 10, 5, 22, 1, 5000000)," +
+                "(3, '2025-10', 170, 0, 0, 0, 26, 0, 10000000)," +
+                "(4, '2025-10', 165, 8, 5, 10, 25, 1, 9500000)," +
+                "(5, '2025-10', 100, 6, 15, 5, 20, 0, 4800000)");
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        // Khi nâng cấp database, xóa các bảng cũ đi và tạo lại
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_ATTENDANCES);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_SCHEDULES);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_USERS);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_TONGHOP);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_CALAM);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_NHANVIEN);
         onCreate(db);
     }
 
-    // Thêm các người dùng mặc định
-    private void addDefaultUsers(SQLiteDatabase db) {
-        // --- Người dùng 1 ---
-        ContentValues values1 = new ContentValues();
-        values1.put(COLUMN_USERNAME, "0123456789");
-        values1.put(COLUMN_PASSWORD, "12345");
-        values1.put(COLUMN_FULL_NAME, "Test User");
-        values1.put(COLUMN_POSITION, "Nhân viên");
-        db.insert(TABLE_USERS, null, values1);
-
-        // --- Người dùng 2 (Tài khoản bạn yêu cầu) ---
-        ContentValues values2 = new ContentValues();
-        values2.put(COLUMN_USERNAME, "0356897098");
-        values2.put(COLUMN_PASSWORD, "12345");
-        values2.put(COLUMN_FULL_NAME, "Nhân Viên Mới");
-        values2.put(COLUMN_POSITION, "Nhân viên");
-        db.insert(TABLE_USERS, null, values2);
+    // ✅ Thêm hàm này để tránh lỗi khi version giảm
+    @Override
+    public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_TONGHOP);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_CALAM);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_NHANVIEN);
+        onCreate(db);
     }
 
-    // ======================== CHỖ TÔI ĐÃ SỬA ========================
-    /**
-     * Kiểm tra thông tin đăng nhập và lấy ID của người dùng.
-     * Thay vì trả về true/false, hàm này trả về ID của người dùng nếu thành công.
-     * @param username Tên đăng nhập (SĐT)
-     * @param password Mật khẩu
-     * @return ID (kiểu long) của người dùng nếu đăng nhập thành công, -1 nếu thất bại.
-     */
-    public long checkUserAndGetId(String username, String password) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        long userId = -1; // Giá trị mặc định nếu không tìm thấy user
+    // ================== HÀM CHỨC NĂNG ==================
 
-        String[] columns = {COLUMN_USER_ID};
-        String selection = COLUMN_USERNAME + " = ? AND " + COLUMN_PASSWORD + " = ?";
-        String[] selectionArgs = {username, password};
+    public long addNhanVien(String hoTen, String ngaySinh, String chucVu, double mucLuong,
+                            String soDienThoai, String loai, String matKhau) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put(NV_HOTEN, hoTen);
+        cv.put(NV_NGAYSINH, ngaySinh);
+        cv.put(NV_CHUCVU, chucVu);
+        cv.put(NV_MUCLUONG, mucLuong);
+        cv.put(NV_SDT, soDienThoai);
+        cv.put(NV_LOAI, loai);
+        cv.put(NV_MATKHAU, matKhau);
+        return db.insert(TABLE_NHANVIEN, null, cv);
+    }
 
-        Cursor cursor = db.query(TABLE_USERS, columns, selection, selectionArgs, null, null, null);
+    public long addCaLam(int manv, String ngay, String ca, int ot, int nghiDuocKhong) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put(CL_MANV, manv);
+        cv.put(CL_NGAY, ngay);
+        cv.put(CL_CA, ca);
+        cv.put(CL_OT, ot);
+        cv.put(CL_NGHI, nghiDuocKhong);
+        return db.insert(TABLE_CALAM, null, cv);
+    }
 
-        // Nếu con trỏ có thể di chuyển đến hàng đầu tiên, nghĩa là tìm thấy người dùng
-        if (cursor.moveToFirst()) {
-            // Lấy ID từ cột COLUMN_USER_ID.
-            // getColumnIndexOrThrow sẽ báo lỗi nếu tên cột không tồn tại, giúp phát hiện lỗi sớm.
-            userId = cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_USER_ID));
+    public void updateCheckIn(int id, long time, int phutMuon) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put(CL_CHECKIN, time);
+        cv.put(CL_MUON, phutMuon);
+        db.update(TABLE_CALAM, cv, CL_ID + "=?", new String[]{String.valueOf(id)});
+    }
+
+    public void updateCheckOut(int id, long time, int phutSom) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put(CL_CHECKOUT, time);
+        cv.put(CL_SOM, phutSom);
+        db.update(TABLE_CALAM, cv, CL_ID + "=?", new String[]{String.valueOf(id)});
+    }
+
+    public double tinhLuong(int manv, String loai, double mucLuong,
+                            double gioLamThuong, double gioTangCa,
+                            int phutMuon, int phutSom, int ngayLam, int ngayNghiCoLuong) {
+
+        double luong = 0;
+
+        if (loai.equalsIgnoreCase("fulltime")) {
+            double luongNgay = mucLuong / 26.0;
+            double luongGio = luongNgay / 8.0;
+            luong = (ngayLam / 26.0) * mucLuong
+                    + (gioTangCa * luongGio * 1.5)
+                    + (ngayNghiCoLuong * luongNgay)
+                    - ((phutMuon + phutSom) * 1000);
+        } else {
+            luong = (gioLamThuong * mucLuong)
+                    + (gioTangCa * mucLuong * 1.5)
+                    - ((phutMuon + phutSom) * 1000);
         }
 
-        // Đóng con trỏ và database để giải phóng tài nguyên
-        cursor.close();
-        db.close();
-
-        // Trả về ID người dùng, hoặc -1 nếu không tìm thấy
-        return userId;
+        return luong;
     }
-    // ===============================================================
 }

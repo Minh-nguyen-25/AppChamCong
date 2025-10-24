@@ -32,7 +32,7 @@
                     android:id="@+id/tvName"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Họ tên: Nguyễn Văn A"
+                    android:text="Họ tên: ..."
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:textColor="@color/primary" />
@@ -41,7 +41,7 @@
                     android:id="@+id/tvBirthday"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Ngày sinh: 01/01/1999"
+                    android:text="Ngày sinh: ..."
                     android:textSize="16sp"
                     android:layout_marginTop="4dp"/>
 
@@ -49,7 +49,7 @@
                     android:id="@+id/tvPosition"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Chức vụ: Nhân viên"
+                    android:text="Chức vụ: ..."
                     android:textSize="16sp"
                     android:layout_marginTop="4dp"/>
 
@@ -57,7 +57,7 @@
                     android:id="@+id/tvSalary"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Mức lương: 12,000,000đ"
+                    android:text="Mức lương: ..."
                     android:textSize="16sp"
                     android:layout_marginTop="4dp"
                     android:textStyle="bold"
@@ -84,7 +84,7 @@
                     android:id="@+id/tvShiftToday"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Ca hôm nay: 08:00 - 17:00"
+                    android:text="Ca hôm nay: ..."
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:textColor="@color/primary" />
@@ -113,9 +113,7 @@
                         android:layout_weight="1"
                         android:text="Check Out"
                         android:backgroundTint="@color/primary"
-                        android:textColor="@color/white"
-                        android:layout_marginEnd="8dp"/>
-
+                        android:textColor="@color/white" />
                 </LinearLayout>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
@@ -133,15 +131,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Đăng ký ca làm"
-                android:backgroundTint="@color/primary"
-                android:textColor="@color/white"
-                android:layout_marginTop="8dp"/>
-
-            <Button
-                android:id="@+id/btnRegisterOT"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Đăng ký tăng ca"
                 android:backgroundTint="@color/primary"
                 android:textColor="@color/white"
                 android:layout_marginTop="8dp"/>

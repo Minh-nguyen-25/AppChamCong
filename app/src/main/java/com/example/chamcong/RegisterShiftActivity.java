@@ -17,7 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class RegisterShiftActivity extends AppCompatActivity {
+public class  RegisterShiftActivity extends AppCompatActivity {
 
     private CalendarView calendarView;
     private LinearLayout layoutShift;
