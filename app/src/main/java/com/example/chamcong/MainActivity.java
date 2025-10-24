@@ -9,10 +9,10 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
-import java.util.Calendar;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -27,7 +27,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // nếu layout của mày tên khác: đổi tên resource ở đây
         setContentView(R.layout.activity_main);
 
         db = new DatabaseHelper(this);
@@ -66,10 +65,17 @@ public class MainActivity extends AppCompatActivity {
     private void loadNhanVien() {
         Cursor c = db.getNhanVienById(manv);
         if (c != null && c.moveToFirst()) {
+
             tvName.setText("Họ tên: " + c.getString(c.getColumnIndexOrThrow(DatabaseHelper.NV_HOTEN)));
             tvBirthday.setText("Ngày sinh: " + c.getString(c.getColumnIndexOrThrow(DatabaseHelper.NV_NGAYSINH)));
             tvPosition.setText("Chức vụ: " + c.getString(c.getColumnIndexOrThrow(DatabaseHelper.NV_CHUCVU)));
-            tvSalary.setText("Mức lương: " + c.getDouble(c.getColumnIndexOrThrow(DatabaseHelper.NV_MUCLUONG)));
+
+            // ✅ LẤY LƯƠNG + FORMAT TIỀN VIỆT
+            double salary = c.getDouble(c.getColumnIndexOrThrow(DatabaseHelper.NV_MUCLUONG));
+            NumberFormat formatter = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
+            String formattedSalary = formatter.format(salary).replace("₫", "VNĐ");
+            tvSalary.setText("Mức lương: " + formattedSalary);
+
             c.close();
         }
     }
@@ -92,7 +98,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // Lấy giờ hiện tại HH:mm
     private String nowHHmm() {
         return new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date());
     }
@@ -106,10 +111,8 @@ public class MainActivity extends AppCompatActivity {
         String time = nowHHmm();
         db.updateCheckInTime(todayCaId, time);
 
-        // Reload để show thông tin mới
         loadCaHomNay();
 
-        // thông báo chi tiết: tính trễ
         Cursor c = db.getCaLamForDate(manv, new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date()));
         if (c != null && c.moveToFirst()) {
             int muon = c.getInt(c.getColumnIndexOrThrow(DatabaseHelper.CL_MUON));
