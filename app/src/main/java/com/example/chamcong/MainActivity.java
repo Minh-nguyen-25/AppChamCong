@@ -2,9 +2,7 @@ package com.example.chamcong;
 
 import android.content.Intent;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -12,153 +10,138 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
+import java.util.Date;
 import java.util.Locale;
+import java.util.Calendar;
 
 public class MainActivity extends AppCompatActivity {
 
     TextView tvName, tvBirthday, tvPosition, tvSalary, tvShiftToday;
     Button btnCheckIn, btnCheckOut, btnRegisterShift, btnViewShifts, btnViewSalary;
 
-    DatabaseHelper dbHelper;
-    int manv; // mã nhân viên đăng nhập
-    String loai;
-    double mucLuong;
-    int calamId = -1; // id ca làm trong ngày
+    DatabaseHelper db;
+    int manv;
+    int todayCaId = -1;
+    String todayCaString = null; // e.g. "8h30-13h"
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // nếu layout của mày tên khác: đổi tên resource ở đây
         setContentView(R.layout.activity_main);
 
-        dbHelper = new DatabaseHelper(this);
+        db = new DatabaseHelper(this);
 
-        // 🟢 Lấy mã nhân viên từ Intent (truyền từ LoginActivity)
-        manv = getIntent().getIntExtra("MANV", -1);
-        if (manv == -1) {
-            Toast.makeText(this, "Lỗi: Không tìm thấy thông tin nhân viên!", Toast.LENGTH_SHORT).show();
-            finish();
-            return;
-        }
-
-        // Ánh xạ view
         tvName = findViewById(R.id.tvName);
         tvBirthday = findViewById(R.id.tvBirthday);
         tvPosition = findViewById(R.id.tvPosition);
         tvSalary = findViewById(R.id.tvSalary);
         tvShiftToday = findViewById(R.id.tvShiftToday);
+
         btnCheckIn = findViewById(R.id.btnCheckIn);
         btnCheckOut = findViewById(R.id.btnCheckOut);
         btnRegisterShift = findViewById(R.id.btnRegisterShift);
         btnViewShifts = findViewById(R.id.btnViewShifts);
         btnViewSalary = findViewById(R.id.btnViewSalary);
 
-        // Hiển thị thông tin nhân viên
-        loadEmployeeInfo();
-
-        // Kiểm tra ca làm hôm nay
-        checkTodayShift();
-
-        // Nút Check In
-        btnCheckIn.setOnClickListener(v -> handleCheckIn());
-
-        // Nút Check Out
-        btnCheckOut.setOnClickListener(v -> handleCheckOut());
-
-        // Nút chuyển Activity
-        btnRegisterShift.setOnClickListener(v ->
-                startActivity(new Intent(this, RegisterShiftActivity.class).putExtra("MANV", manv))
-        );
-        btnViewShifts.setOnClickListener(v ->
-                startActivity(new Intent(this, WorkScheduleActivity.class).putExtra("MANV", manv))
-        );
-        btnViewSalary.setOnClickListener(v ->
-                startActivity(new Intent(this, SalaryActivity.class).putExtra("MANV", manv))
-        );
-    }
-
-    // ======================= HIỂN THỊ THÔNG TIN =======================
-    private void loadEmployeeInfo() {
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT * FROM " + DatabaseHelper.TABLE_NHANVIEN +
-                " WHERE " + DatabaseHelper.NV_ID + "=?", new String[]{String.valueOf(manv)});
-        if (cursor.moveToFirst()) {
-            String hoTen = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.NV_HOTEN));
-            String ngaySinh = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.NV_NGAYSINH));
-            String chucVu = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.NV_CHUCVU));
-            mucLuong = cursor.getDouble(cursor.getColumnIndexOrThrow(DatabaseHelper.NV_MUCLUONG));
-            loai = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.NV_LOAI));
-
-            tvName.setText("Họ tên: " + hoTen);
-            tvBirthday.setText("Ngày sinh: " + ngaySinh);
-            tvPosition.setText("Chức vụ: " + chucVu);
-            tvSalary.setText("Mức lương: " + mucLuong + (loai.equals("parttime") ? "đ/giờ" : "đ/tháng"));
+        manv = getIntent().getIntExtra("MANV", -1);
+        if (manv == -1) {
+            Toast.makeText(this, "Không tìm thấy thông tin nhân viên. Vui lòng đăng nhập lại.", Toast.LENGTH_LONG).show();
+            startActivity(new Intent(this, LoginActivity.class));
+            finish();
+            return;
         }
-        cursor.close();
+
+        loadNhanVien();
+        loadCaHomNay();
+
+        btnCheckIn.setOnClickListener(v -> doCheckIn());
+        btnCheckOut.setOnClickListener(v -> doCheckOut());
+
+        btnRegisterShift.setOnClickListener(v -> startActivity(new Intent(this, RegisterShiftActivity.class)));
+        btnViewShifts.setOnClickListener(v -> startActivity(new Intent(this, WorkScheduleActivity.class)));
+        btnViewSalary.setOnClickListener(v -> startActivity(new Intent(this, SalaryActivity.class)));
     }
 
-    // ======================= KIỂM TRA CA HÔM NAY =======================
-    private void checkTodayShift() {
-        String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Calendar.getInstance().getTime());
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT * FROM " + DatabaseHelper.TABLE_CALAM +
-                        " WHERE " + DatabaseHelper.CL_MANV + "=? AND " + DatabaseHelper.CL_NGAY + "=?",
-                new String[]{String.valueOf(manv), today});
+    private void loadNhanVien() {
+        Cursor c = db.getNhanVienById(manv);
+        if (c != null && c.moveToFirst()) {
+            tvName.setText("Họ tên: " + c.getString(c.getColumnIndexOrThrow(DatabaseHelper.NV_HOTEN)));
+            tvBirthday.setText("Ngày sinh: " + c.getString(c.getColumnIndexOrThrow(DatabaseHelper.NV_NGAYSINH)));
+            tvPosition.setText("Chức vụ: " + c.getString(c.getColumnIndexOrThrow(DatabaseHelper.NV_CHUCVU)));
+            tvSalary.setText("Mức lương: " + c.getDouble(c.getColumnIndexOrThrow(DatabaseHelper.NV_MUCLUONG)));
+            c.close();
+        }
+    }
 
-        if (cursor.moveToFirst()) {
-            calamId = cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseHelper.CL_ID));
-            String ca = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseHelper.CL_CA));
-            Integer checkIn = cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseHelper.CL_CHECKIN));
-            Integer checkOut = cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseHelper.CL_CHECKOUT));
-
-            tvShiftToday.setText("Ca hôm nay: " + ca);
-
-            // ✅ Cập nhật trạng thái nút
-            if (checkIn != 0) {
-                btnCheckIn.setText("Đã Check In");
-                btnCheckIn.setEnabled(false);
-            }
-            if (checkOut != 0) {
-                btnCheckOut.setText("Đã Check Out");
-                btnCheckOut.setEnabled(false);
-            }
+    private void loadCaHomNay() {
+        String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+        Cursor c = db.getCaLamForDate(manv, today);
+        if (c != null && c.moveToFirst()) {
+            todayCaId = c.getInt(c.getColumnIndexOrThrow(DatabaseHelper.CL_ID));
+            todayCaString = c.getString(c.getColumnIndexOrThrow(DatabaseHelper.CL_CA));
+            String checkIn = c.getString(c.getColumnIndexOrThrow(DatabaseHelper.CL_CHECKIN));
+            String checkOut = c.getString(c.getColumnIndexOrThrow(DatabaseHelper.CL_CHECKOUT));
+            tvShiftToday.setText("Ca hôm nay: " + todayCaString +
+                    (checkIn != null ? "\n(Đã check-in: " + checkIn + ")" : "") +
+                    (checkOut != null ? "\n(Đã check-out: " + checkOut + ")" : ""));
+            c.close();
         } else {
-            tvShiftToday.setText("Hôm nay chưa có ca làm!");
-            btnCheckIn.setEnabled(false);
-            btnCheckOut.setEnabled(false);
+            tvShiftToday.setText("Hôm nay chưa đăng ký ca");
+            if (c != null) c.close();
         }
-        cursor.close();
     }
 
-    // ======================= CHECK IN =======================
-    private void handleCheckIn() {
-        if (calamId == -1) {
-            Toast.makeText(this, "Không tìm thấy ca làm hôm nay!", Toast.LENGTH_SHORT).show();
+    // Lấy giờ hiện tại HH:mm
+    private String nowHHmm() {
+        return new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date());
+    }
+
+    private void doCheckIn() {
+        if (todayCaId == -1) {
+            Toast.makeText(this, "Bạn chưa có ca làm hôm nay!", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        Calendar cal = Calendar.getInstance();
-        int time = cal.get(Calendar.HOUR_OF_DAY) * 100 + cal.get(Calendar.MINUTE);
-        dbHelper.updateCheckIn(calamId, time, 0);
+        String time = nowHHmm();
+        db.updateCheckInTime(todayCaId, time);
 
-        btnCheckIn.setText("Đã Check In");
-        btnCheckIn.setEnabled(false);
-        Toast.makeText(this, "Check In lúc: " + time, Toast.LENGTH_SHORT).show();
+        // Reload để show thông tin mới
+        loadCaHomNay();
+
+        // thông báo chi tiết: tính trễ
+        Cursor c = db.getCaLamForDate(manv, new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date()));
+        if (c != null && c.moveToFirst()) {
+            int muon = c.getInt(c.getColumnIndexOrThrow(DatabaseHelper.CL_MUON));
+            if (muon > 0) {
+                Toast.makeText(this, "Đã Check In lúc " + time + " — Trễ " + muon + " phút", Toast.LENGTH_LONG).show();
+            } else {
+                Toast.makeText(this, "Đã Check In lúc " + time, Toast.LENGTH_SHORT).show();
+            }
+            c.close();
+        }
     }
 
-    // ======================= CHECK OUT =======================
-    private void handleCheckOut() {
-        if (calamId == -1) {
-            Toast.makeText(this, "Không tìm thấy ca làm hôm nay!", Toast.LENGTH_SHORT).show();
+    private void doCheckOut() {
+        if (todayCaId == -1) {
+            Toast.makeText(this, "Bạn chưa có ca làm hôm nay!", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        Calendar cal = Calendar.getInstance();
-        int time = cal.get(Calendar.HOUR_OF_DAY) * 100 + cal.get(Calendar.MINUTE);
-        dbHelper.updateCheckOut(calamId, time, 0);
+        String time = nowHHmm();
+        db.updateCheckOutTime(todayCaId, time);
 
-        btnCheckOut.setText("Đã Check Out");
-        btnCheckOut.setEnabled(false);
-        Toast.makeText(this, "Check Out lúc: " + time, Toast.LENGTH_SHORT).show();
+        loadCaHomNay();
+
+        Cursor c = db.getCaLamForDate(manv, new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date()));
+        if (c != null && c.moveToFirst()) {
+            int som = c.getInt(c.getColumnIndexOrThrow(DatabaseHelper.CL_SOM));
+            if (som > 0) {
+                Toast.makeText(this, "Đã Check Out lúc " + time + " — Về sớm " + som + " phút", Toast.LENGTH_LONG).show();
+            } else {
+                Toast.makeText(this, "Đã Check Out lúc " + time, Toast.LENGTH_SHORT).show();
+            }
+            c.close();
+        }
     }
 }

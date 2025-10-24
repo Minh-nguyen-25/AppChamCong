@@ -2,7 +2,6 @@ package com.example.chamcong;
 
 import android.content.Intent;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
@@ -20,7 +19,6 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-        this.deleteDatabase("ChamCong.db");
 
         db = new DatabaseHelper(this);
 
@@ -32,17 +30,16 @@ public class LoginActivity extends AppCompatActivity {
             String phone = etPhone.getText().toString().trim();
             String password = etPassword.getText().toString().trim();
 
-            if (phone.isEmpty() || password.isEmpty() || phone.length() != 10) {
-                Toast.makeText(this, "Vui lòng nhập đúng định dạng số điện thoại và mật khẩu", Toast.LENGTH_SHORT).show();
+            if (phone.isEmpty() || password.isEmpty()) {
+                Toast.makeText(this, "Vui lòng nhập số điện thoại và mật khẩu!", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            long userId = checkUserAndGetId(phone, password);
-            if (userId != -1) {
+            long manv = checkUserAndGetId(phone, password);
+            if (manv != -1) {
                 Toast.makeText(this, "Đăng nhập thành công!", Toast.LENGTH_SHORT).show();
-
                 Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                intent.putExtra("USER_ID", userId);
+                intent.putExtra("MANV", (int) manv);
                 startActivity(intent);
                 finish();
             } else {
@@ -51,27 +48,21 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
-    /**
-     * Kiểm tra người dùng theo số điện thoại & mật khẩu.
-     * Trả về id nếu đúng, -1 nếu sai.
-     */
+    // trả về manv hoặc -1
     private long checkUserAndGetId(String phone, String password) {
-        SQLiteDatabase database = db.getReadableDatabase();
-
-        Cursor cursor = database.rawQuery(
-                "SELECT " + DatabaseHelper.NV_ID + " FROM " + DatabaseHelper.TABLE_NHANVIEN + " WHERE " + DatabaseHelper.NV_SDT + " = ? AND " + DatabaseHelper.NV_MATKHAU + " = ?",
-                new String[]{phone, password}
+        long id = -1;
+        Cursor cursor = db.getReadableDatabase().query(
+                DatabaseHelper.TABLE_NHANVIEN,
+                new String[]{DatabaseHelper.NV_ID},
+                DatabaseHelper.NV_SDT + "=? AND " + DatabaseHelper.NV_MATKHAU + "=?",
+                new String[]{phone, password},
+                null, null, null
         );
 
-        long id = -1;
-        if (cursor.moveToFirst()) {
-            int index = cursor.getColumnIndex(DatabaseHelper.NV_ID);
-            if (index >= 0) id = cursor.getLong(index);
+        if (cursor != null && cursor.moveToFirst()) {
+            id = cursor.getLong(0); // lấy cột đầu (NV_ID)
+            cursor.close();
         }
-
-        cursor.close();
-        database.close();
         return id;
     }
-
 }

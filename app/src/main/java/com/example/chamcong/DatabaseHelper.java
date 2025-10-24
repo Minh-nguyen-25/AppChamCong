@@ -7,11 +7,16 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Locale;
+import java.util.Date;
+
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     // --- THÔNG TIN DB ---
     private static final String DATABASE_NAME = "ChamCong.db";
-    private static final int DATABASE_VERSION = 4; // ✅ Tăng version lên để tránh lỗi downgrade
+    private static final int DATABASE_VERSION = 5; // tăng version nếu thay schema
 
     // --- BẢNG NHÂN VIÊN ---
     public static final String TABLE_NHANVIEN = "NhanVien";
@@ -28,13 +33,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String TABLE_CALAM = "CaLam";
     public static final String CL_ID = "id";
     public static final String CL_MANV = "manv";
-    public static final String CL_NGAY = "ngay";
-    public static final String CL_CA = "ca";
+    public static final String CL_NGAY = "ngay"; // yyyy-MM-dd
+    public static final String CL_CA = "ca"; // '8h30-13h' ...
     public static final String CL_OT = "ot";
-    public static final String CL_CHECKIN = "checkIn";
-    public static final String CL_CHECKOUT = "checkOut";
-    public static final String CL_MUON = "checkInMuon";
-    public static final String CL_SOM = "checkOutSom";
+    public static final String CL_CHECKIN = "checkIn";   // HH:mm (TEXT)
+    public static final String CL_CHECKOUT = "checkOut"; // HH:mm (TEXT)
+    public static final String CL_MUON = "checkInMuon";  // phút muộn (INTEGER)
+    public static final String CL_SOM = "checkOutSom";   // phút sớm (INTEGER)
     public static final String CL_NGHI = "nghiDuocKhong";
 
     // --- BẢNG TỔNG HỢP ---
@@ -50,6 +55,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String TH_NGAYNGHI = "ngayNghiCoLuong";
     public static final String TH_LUONG = "luong";
 
+    private static final SimpleDateFormat HHMM = new SimpleDateFormat("HH:mm", Locale.getDefault());
+    private static final SimpleDateFormat YYYYMMDD = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
@@ -57,33 +65,34 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
 
-        // BẢNG NHÂN VIÊN
-        db.execSQL("CREATE TABLE " + TABLE_NHANVIEN + " (" +
+        // BẢNG NHÂN VIÊN (soDienThoai UNIQUE)
+        db.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE_NHANVIEN + " (" +
                 NV_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 NV_HOTEN + " TEXT NOT NULL, " +
                 NV_NGAYSINH + " TEXT, " +
                 NV_CHUCVU + " TEXT, " +
                 NV_MUCLUONG + " REAL NOT NULL, " +
-                NV_SDT + " TEXT, " +
+                NV_SDT + " TEXT UNIQUE, " +
                 NV_LOAI + " TEXT CHECK(" + NV_LOAI + " IN ('fulltime','parttime')), " +
                 NV_MATKHAU + " TEXT NOT NULL)");
 
-        // BẢNG CA LÀM
-        db.execSQL("CREATE TABLE " + TABLE_CALAM + " (" +
+        // BẢNG CA LÀM (checkIn/checkOut lưu dạng "HH:mm" TEXT), UNIQUE(manv,ngay,ca)
+        db.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE_CALAM + " (" +
                 CL_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 CL_MANV + " INTEGER NOT NULL, " +
                 CL_NGAY + " TEXT NOT NULL, " +
                 CL_CA + " TEXT CHECK(" + CL_CA + " IN ('8h30-13h','13h-17h30','17h30-22h')), " +
                 CL_OT + " INTEGER DEFAULT 0, " +
-                CL_CHECKIN + " INTEGER, " +
-                CL_CHECKOUT + " INTEGER, " +
+                CL_CHECKIN + " TEXT, " +
+                CL_CHECKOUT + " TEXT, " +
                 CL_MUON + " INTEGER DEFAULT 0, " +
                 CL_SOM + " INTEGER DEFAULT 0, " +
                 CL_NGHI + " INTEGER DEFAULT 0, " +
+                "UNIQUE(" + CL_MANV + "," + CL_NGAY + "," + CL_CA + "), " +
                 "FOREIGN KEY(" + CL_MANV + ") REFERENCES " + TABLE_NHANVIEN + "(" + NV_ID + "))");
 
         // BẢNG TỔNG HỢP
-        db.execSQL("CREATE TABLE " + TABLE_TONGHOP + " (" +
+        db.execSQL("CREATE TABLE IF NOT EXISTS " + TABLE_TONGHOP + " (" +
                 TH_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 TH_MANV + " INTEGER NOT NULL, " +
                 TH_THANG + " TEXT NOT NULL, " +
@@ -95,13 +104,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 TH_NGAYNGHI + " INTEGER DEFAULT 0, " +
                 TH_LUONG + " REAL DEFAULT 0, " +
                 "FOREIGN KEY(" + TH_MANV + ") REFERENCES " + TABLE_NHANVIEN + "(" + NV_ID + "))");
+
         insertSampleData(db);
     }
 
-    // 🟢 Hàm thêm dữ liệu mẫu
+    // 🟢 Hàm thêm dữ liệu mẫu (giữ dạng checkIn/checkOut là "HH:mm" hoặc NULL)
     private void insertSampleData(SQLiteDatabase db) {
         // 1️⃣ Bảng NhanVien
-        db.execSQL("INSERT INTO " + TABLE_NHANVIEN +
+        db.execSQL("INSERT OR IGNORE INTO " + TABLE_NHANVIEN +
                 " (" + NV_HOTEN + ", " + NV_NGAYSINH + ", " + NV_CHUCVU + ", " + NV_MUCLUONG + ", " + NV_SDT + ", " + NV_LOAI + ", " + NV_MATKHAU + ") VALUES " +
                 "('Nguyen Van A', '1995-01-10', 'Quản lý', 13000000, '0901234567', 'fulltime', '123456')," +
                 "('Tran Thi B', '1998-05-22', 'Nhân viên bán hàng', 40000, '0902234567', 'parttime', '111111')," +
@@ -109,17 +119,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "('Pham Thi D', '1997-03-19', 'Thu ngân', 9000000, '0904234567', 'fulltime', '333333')," +
                 "('Hoang Van E', '2000-07-01', 'Phục vụ', 35000, '0905234567', 'parttime', '444444')");
 
-        // 2️⃣ Bảng CaLam (mỗi người 1 ca mẫu)
-        db.execSQL("INSERT INTO " + TABLE_CALAM +
+        // 2️⃣ Bảng CaLam (mỗi người 1 ca mẫu) - ngày mẫu
+        db.execSQL("INSERT OR IGNORE INTO " + TABLE_CALAM +
                 " (" + CL_MANV + ", " + CL_NGAY + ", " + CL_CA + ", " + CL_OT + ", " + CL_CHECKIN + ", " + CL_CHECKOUT + ", " + CL_MUON + ", " + CL_SOM + ", " + CL_NGHI + ") VALUES " +
-                "(1, '2025-10-20', '8h30-13h', 1, 830, 1300, 0, 0, 0)," +
-                "(2, '2025-10-20', '13h-17h30', 0, 1310, 1730, 10, 0, 0)," +
-                "(3, '2025-10-20', '17h30-22h', 0, 1730, 2200, 0, 0, 0)," +
-                "(4, '2025-10-20', '8h30-13h', 1, 830, 1330, 0, 0, 0)," +
-                "(5, '2025-10-20', '13h-17h30', 0, 1330, 1730, 0, 0, 0)");
+                "(1, '2025-10-20', '8h30-13h', 1, '08:30', '13:00', 0, 0, 0)," +
+                "(2, '2025-10-20', '13h-17h30', 0, '13:10', '17:30', 10, 0, 0)," +
+                "(3, '2025-10-20', '17h30-22h', 0, '17:30', '22:00', 0, 0, 0)," +
+                "(4, '2025-10-20', '8h30-13h', 1, '08:30', '13:30', 0, 0, 0)," +
+                "(5, '2025-10-20', '13h-17h30', 0, '13:30', '17:30', 0, 0, 0)");
 
-        // 3️⃣ Bảng TongHop
-        db.execSQL("INSERT INTO " + TABLE_TONGHOP +
+        // 3️⃣ Bảng TongHop (mẫu)
+        db.execSQL("INSERT OR IGNORE INTO " + TABLE_TONGHOP +
                 " (" + TH_MANV + ", " + TH_THANG + ", " + TH_GIOLAM + ", " + TH_GIOOT + ", " + TH_MUON + ", " + TH_SOM + ", " + TH_NGAYLAM + ", " + TH_NGAYNGHI + ", " + TH_LUONG + ") VALUES " +
                 "(1, '2025-10', 160, 10, 20, 10, 26, 2, 13500000)," +
                 "(2, '2025-10', 120, 5, 10, 5, 22, 1, 5000000)," +
@@ -130,83 +140,163 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        // đơn giản drop + recreate (nâng version sẽ reset data mẫu)
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_TONGHOP);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_CALAM);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_NHANVIEN);
         onCreate(db);
     }
 
-    // ✅ Thêm hàm này để tránh lỗi khi version giảm
     @Override
     public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_TONGHOP);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_CALAM);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_NHANVIEN);
-        onCreate(db);
+        onUpgrade(db, oldVersion, newVersion);
     }
 
-    // ================== HÀM CHỨC NĂNG ==================
+    // ================== HÀM TIỆN ÍCH ==================
 
-    public long addNhanVien(String hoTen, String ngaySinh, String chucVu, double mucLuong,
-                            String soDienThoai, String loai, String matKhau) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues cv = new ContentValues();
-        cv.put(NV_HOTEN, hoTen);
-        cv.put(NV_NGAYSINH, ngaySinh);
-        cv.put(NV_CHUCVU, chucVu);
-        cv.put(NV_MUCLUONG, mucLuong);
-        cv.put(NV_SDT, soDienThoai);
-        cv.put(NV_LOAI, loai);
-        cv.put(NV_MATKHAU, matKhau);
-        return db.insert(TABLE_NHANVIEN, null, cv);
+    // Lấy thông tin nhân viên theo manv
+    public Cursor getNhanVienById(int manv) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        return db.query(TABLE_NHANVIEN, null, NV_ID + "=?", new String[]{String.valueOf(manv)}, null, null, null);
     }
 
-    public long addCaLam(int manv, String ngay, String ca, int ot, int nghiDuocKhong) {
+    // Lấy CaLam cho 1 nhân viên vào 1 ngày (yyyy-MM-dd). Trả Cursor (1 row) hoặc null
+    public Cursor getCaLamForDate(int manv, String date) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor c = db.query(TABLE_CALAM, null, CL_MANV + "=? AND " + CL_NGAY + "=?", new String[]{
+                String.valueOf(manv), date
+        }, null, null, null);
+        return c;
+    }
+
+    // Lấy ca hôm nay theo manv (trả String ca hoặc null)
+    public String getCaLamHomNay(int manv) {
+        String today = YYYYMMDD.format(new Date());
+        Cursor c = getCaLamForDate(manv, today);
+        if (c != null && c.moveToFirst()) {
+            String ca = c.getString(c.getColumnIndexOrThrow(CL_CA));
+            c.close();
+            return ca;
+        }
+        if (c != null) c.close();
+        return null;
+    }
+
+    // Thêm ca (sử dụng try/catch để tránh lỗi UNIQUE)
+    public long addCaLam(int manv, String ngay, String ca, int ot, Integer checkInHHMM, Integer checkOutHHMM, int nghiDuocKhong) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
         cv.put(CL_MANV, manv);
         cv.put(CL_NGAY, ngay);
         cv.put(CL_CA, ca);
         cv.put(CL_OT, ot);
+        if (checkInHHMM != null) {
+            // nhận dạng số dạng 830 -> convert to "08:30"
+            String s = formatFromIntHM(checkInHHMM);
+            cv.put(CL_CHECKIN, s);
+        }
+        if (checkOutHHMM != null) {
+            cv.put(CL_CHECKOUT, formatFromIntHM(checkOutHHMM));
+        }
         cv.put(CL_NGHI, nghiDuocKhong);
-        return db.insert(TABLE_CALAM, null, cv);
+        return db.insertWithOnConflict(TABLE_CALAM, null, cv, SQLiteDatabase.CONFLICT_IGNORE);
     }
 
-    public void updateCheckIn(int id, long time, int phutMuon) {
+    // Cập nhật check-in: lưu "HH:mm" và tự tính phút muộn
+    public void updateCheckInTime(int id, String timeHHmm) {
         SQLiteDatabase db = this.getWritableDatabase();
+
+        // Lấy ca để biết giờ bắt đầu
+        Cursor c = db.query(TABLE_CALAM, new String[]{CL_CA}, CL_ID + "=?", new String[]{String.valueOf(id)}, null, null, null);
+        int phutMuon = 0;
+        if (c != null && c.moveToFirst()) {
+            String ca = c.getString(c.getColumnIndexOrThrow(CL_CA));
+            try {
+                int startMinutes = caStartMinutes(ca);
+                int checkedMinutes = minutesFromHHmm(timeHHmm);
+                phutMuon = Math.max(0, checkedMinutes - startMinutes);
+            } catch (Exception e) {
+                Log.e("DB", "parse ca error", e);
+            }
+            c.close();
+        }
+
         ContentValues cv = new ContentValues();
-        cv.put(CL_CHECKIN, time);
+        cv.put(CL_CHECKIN, timeHHmm);
         cv.put(CL_MUON, phutMuon);
         db.update(TABLE_CALAM, cv, CL_ID + "=?", new String[]{String.valueOf(id)});
     }
 
-    public void updateCheckOut(int id, long time, int phutSom) {
+    // Cập nhật check-out: lưu "HH:mm" và tự tính phút sớm
+    public void updateCheckOutTime(int id, String timeHHmm) {
         SQLiteDatabase db = this.getWritableDatabase();
+
+        Cursor c = db.query(TABLE_CALAM, new String[]{CL_CA}, CL_ID + "=?", new String[]{String.valueOf(id)}, null, null, null);
+        int phutSom = 0;
+        if (c != null && c.moveToFirst()) {
+            String ca = c.getString(c.getColumnIndexOrThrow(CL_CA));
+            try {
+                int endMinutes = caEndMinutes(ca);
+                int checkedMinutes = minutesFromHHmm(timeHHmm);
+                phutSom = Math.max(0, endMinutes - checkedMinutes); // nếu >0 => về sớm
+            } catch (Exception e) {
+                Log.e("DB", "parse ca error", e);
+            }
+            c.close();
+        }
+
         ContentValues cv = new ContentValues();
-        cv.put(CL_CHECKOUT, time);
+        cv.put(CL_CHECKOUT, timeHHmm);
         cv.put(CL_SOM, phutSom);
         db.update(TABLE_CALAM, cv, CL_ID + "=?", new String[]{String.valueOf(id)});
     }
 
-    public double tinhLuong(int manv, String loai, double mucLuong,
-                            double gioLamThuong, double gioTangCa,
-                            int phutMuon, int phutSom, int ngayLam, int ngayNghiCoLuong) {
+    // ================== Helpers ==================
 
-        double luong = 0;
+    // parse "8h30-13h" -> start minutes from midnight (8*60+30)
+    private int caStartMinutes(String ca) throws ParseException {
+        // ca format like "8h30-13h" or "13h-17h30" or "17h30-22h"
+        String left = ca.split("-")[0]; // e.g. "8h30" or "13h"
+        return hmStringToMinutes(convertHToHHmm(left));
+    }
 
-        if (loai.equalsIgnoreCase("fulltime")) {
-            double luongNgay = mucLuong / 26.0;
-            double luongGio = luongNgay / 8.0;
-            luong = (ngayLam / 26.0) * mucLuong
-                    + (gioTangCa * luongGio * 1.5)
-                    + (ngayNghiCoLuong * luongNgay)
-                    - ((phutMuon + phutSom) * 1000);
-        } else {
-            luong = (gioLamThuong * mucLuong)
-                    + (gioTangCa * mucLuong * 1.5)
-                    - ((phutMuon + phutSom) * 1000);
-        }
+    private int caEndMinutes(String ca) throws ParseException {
+        String right = ca.split("-")[1]; // e.g. "13h" or "17h30"
+        return hmStringToMinutes(convertHToHHmm(right));
+    }
 
-        return luong;
+    // convert "8h30" or "13h" into "08:30" or "13:00"
+    private String convertHToHHmm(String s) {
+        s = s.trim();
+        s = s.replace("h", ":");
+        if (!s.contains(":")) s = s + ":00";
+        // ensure two-digit hour/minute
+        String[] p = s.split(":");
+        String hh = p[0].length() == 1 ? "0" + p[0] : p[0];
+        String mm = p[1].length() == 1 ? "0" + p[1] : p[1];
+        return hh + ":" + mm;
+    }
+
+    // "08:30" -> minutes since midnight
+    private int minutesFromHHmm(String hhmm) throws ParseException {
+        Date d = HHMM.parse(hhmm);
+        int hours = d.getHours(); // deprecated but OK for minute calc
+        int mins = d.getMinutes();
+        return hours * 60 + mins;
+    }
+
+    // alternative parsing from "08:30" using split (safer)
+    private int hmStringToMinutes(String hhmm) {
+        String[] parts = hhmm.split(":");
+        int hh = Integer.parseInt(parts[0]);
+        int mm = Integer.parseInt(parts[1]);
+        return hh * 60 + mm;
+    }
+
+    private String formatFromIntHM(int hm) {
+        // hm like 830 -> "08:30", 1310 -> "13:10"
+        int hours = hm / 100;
+        int mins = hm % 100;
+        return String.format(Locale.getDefault(), "%02d:%02d", hours, mins);
     }
 }
