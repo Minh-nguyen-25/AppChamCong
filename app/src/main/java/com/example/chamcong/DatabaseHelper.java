@@ -9,14 +9,15 @@ import android.util.Log;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Locale;
 import java.util.Date;
+import java.util.Locale;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     // --- THÔNG TIN DB ---
+    // ⭐ TĂNG VERSION ĐỂ KÍCH HOẠT onUpgrade, TẠO LẠI DỮ LIỆU
     private static final String DATABASE_NAME = "ChamCong.db";
-    private static final int DATABASE_VERSION = 5; // tăng version nếu thay schema
+    private static final int DATABASE_VERSION = 11;
 
     // --- BẢNG NHÂN VIÊN ---
     public static final String TABLE_NHANVIEN = "NhanVien";
@@ -108,7 +109,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         insertSampleData(db);
     }
 
-    // 🟢 Hàm thêm dữ liệu mẫu (giữ dạng checkIn/checkOut là "HH:mm" hoặc NULL)
+    // 🟢 Hàm thêm dữ liệu mẫu
     private void insertSampleData(SQLiteDatabase db) {
         // 1️⃣ Bảng NhanVien
         db.execSQL("INSERT OR IGNORE INTO " + TABLE_NHANVIEN +
@@ -119,7 +120,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "('Pham Thi D', '1997-03-19', 'Thu ngân', 9000000, '0904234567', 'fulltime', '333333')," +
                 "('Hoang Van E', '2000-07-01', 'Phục vụ', 35000, '0905234567', 'parttime', '444444')");
 
-        // 2️⃣ Bảng CaLam (mỗi người 1 ca mẫu) - ngày mẫu
+        // 2️⃣ Bảng CaLam (dữ liệu mẫu ở tương lai)
         db.execSQL("INSERT OR IGNORE INTO " + TABLE_CALAM +
                 " (" + CL_MANV + ", " + CL_NGAY + ", " + CL_CA + ", " + CL_OT + ", " + CL_CHECKIN + ", " + CL_CHECKOUT + ", " + CL_MUON + ", " + CL_SOM + ", " + CL_NGHI + ") VALUES " +
                 "(1, '2025-10-20', '8h30-13h', 1, '08:30', '13:00', 0, 0, 0)," +
@@ -127,15 +128,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "(3, '2025-10-20', '17h30-22h', 0, '17:30', '22:00', 0, 0, 0)," +
                 "(4, '2025-10-20', '8h30-13h', 1, '08:30', '13:30', 0, 0, 0)," +
                 "(5, '2025-10-20', '13h-17h30', 0, '13:30', '17:30', 0, 0, 0)");
+        
+        // Thêm ca làm cho hôm nay để test
+        ContentValues cvToday = new ContentValues();
+        cvToday.put(CL_MANV, 1);
+        cvToday.put(CL_NGAY, YYYYMMDD.format(new Date()));
+        cvToday.put(CL_CA, "8h30-13h");
+        cvToday.put(CL_OT, 3);
 
-        // 3️⃣ Bảng TongHop (mẫu)
-        db.execSQL("INSERT OR IGNORE INTO " + TABLE_TONGHOP +
-                " (" + TH_MANV + ", " + TH_THANG + ", " + TH_GIOLAM + ", " + TH_GIOOT + ", " + TH_MUON + ", " + TH_SOM + ", " + TH_NGAYLAM + ", " + TH_NGAYNGHI + ", " + TH_LUONG + ") VALUES " +
-                "(1, '2025-10', 160, 10, 20, 10, 26, 2, 13500000)," +
-                "(2, '2025-10', 120, 5, 10, 5, 22, 1, 5000000)," +
-                "(3, '2025-10', 170, 0, 0, 0, 26, 0, 10000000)," +
-                "(4, '2025-10', 165, 8, 5, 10, 25, 1, 9500000)," +
-                "(5, '2025-10', 100, 6, 15, 5, 20, 0, 4800000)");
+        db.insertWithOnConflict(TABLE_CALAM, null, cvToday, SQLiteDatabase.CONFLICT_IGNORE);
     }
 
     @Override
@@ -167,6 +168,24 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 String.valueOf(manv), date
         }, null, null, null);
         return c;
+    }
+
+    // 🟢 LẤY TẤT CẢ CA LÀM TRONG THÁNG (dùng cho màn hình lương / lịch làm việc)
+    public Cursor getCaLamForMonth(int manv, int month, int year) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        // Định dạng tháng cho đúng (vd: 7 -> "07")
+        String monthString = String.format(Locale.getDefault(), "%02d", month);
+        // Tạo pattern để tìm kiếm, vd: "2024-07-%"
+        String pattern = year + "-" + monthString + "-%";
+
+        return db.query(TABLE_CALAM,
+                null, // lấy tất cả các cột
+                CL_MANV + " = ? AND " + CL_NGAY + " LIKE ?", // điều kiện
+                new String[]{String.valueOf(manv), pattern}, // giá trị điều kiện
+                null, // groupBy
+                null, // having
+                CL_NGAY + " ASC" // orderBy: sắp xếp theo ngày tăng dần
+        );
     }
 
     // Lấy ca hôm nay theo manv (trả String ca hoặc null)
@@ -270,10 +289,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         s = s.trim();
         s = s.replace("h", ":");
         if (!s.contains(":")) s = s + ":00";
-        // ensure two-digit hour/minute
+        if (s.endsWith(":")) s = s + "00";
         String[] p = s.split(":");
         String hh = p[0].length() == 1 ? "0" + p[0] : p[0];
-        String mm = p[1].length() == 1 ? "0" + p[1] : p[1];
+        String mm = p.length < 2 || p[1].isEmpty() ? "00" : (p[1].length() == 1 ? "0" + p[1] : p[1]);
         return hh + ":" + mm;
     }
 

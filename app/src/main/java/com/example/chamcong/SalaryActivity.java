@@ -1,117 +1,169 @@
 package com.example.chamcong;
 
-import android.annotation.SuppressLint;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.widget.EditText;
-import android.widget.Spinner;
-import android.widget.ArrayAdapter;
+import android.widget.TextView;
 import android.widget.Toast;
-import android.view.View;
-import android.widget.AdapterView;
 import androidx.appcompat.app.AppCompatActivity;
+import java.text.NumberFormat;
+import java.util.Calendar;
+import java.util.Locale;
 
+/**
+ * Màn hình hiển thị chi tiết lương cho nhân viên.
+ * Tự động tính lương trong tháng dựa vào dữ liệu chấm công.
+ */
 public class SalaryActivity extends AppCompatActivity {
 
-    DatabaseHelper dbHelper;
-    Spinner spnMonth, spnYear;
-    EditText edtTongSoCa, edGioLamThuong, edGioTangCa, edLuongCaThuong, edLuongTangCa, edTongLuong;
+    // --- Các hằng số tính lương ---
+    private static final double TIEN_PHAT_DI_MUON = 50000; // Phạt 50,000đ/lần đi muộn
+    private static final double HE_SO_TANG_CA = 1.5;       // Lương tăng ca nhân 1.5
+    private static final int GIO_CHUAN_THANG_FULLTIME = 208; // 8 giờ/ngày * 26 ngày
 
-    long userId; // lấy từ intent (khi login xong)
+    // --- Các thành phần giao diện ---
+    TextView tvTieuDeLuong;
+    EditText edTongSoCa, edGioLamThuong, edGioTangCa, edSoLanDiMuon,
+            edTienPhat, edLuongCaThuong, edLuongTangCa, edTongLuong;
+
+    // --- Biến nghiệp vụ ---
+    DatabaseHelper dbTroGiup;
+    int maNhanVien;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.salary );
+        setContentView(R.layout.salary);
 
-        dbHelper = new DatabaseHelper(this);
+        // --- 1. Khởi tạo và ánh xạ ---
+        dbTroGiup = new DatabaseHelper(this);
 
-        // --- ÁNH XẠ VIEW ---
-        spnMonth = findViewById(R.id.spnMonth);
-        spnYear = findViewById(R.id.spnYear);
-        edtTongSoCa = findViewById(R.id.edtongsoca);
+        tvTieuDeLuong = findViewById(R.id.tvSalaryTitle);
+        edTongSoCa = findViewById(R.id.edtongsoca);
         edGioLamThuong = findViewById(R.id.edgiolamthuong);
         edGioTangCa = findViewById(R.id.edgiotangca);
+        edSoLanDiMuon = findViewById(R.id.edsolandiMuon);
+        edTienPhat = findViewById(R.id.edtienphat);
         edLuongCaThuong = findViewById(R.id.edluongcathuong);
         edLuongTangCa = findViewById(R.id.edluongtangca);
         edTongLuong = findViewById(R.id.edtongluong);
 
-        // Lấy userId từ Intent
-        userId = getIntent().getLongExtra("USER_ID", -1);
-
-        // Gán adapter cho spinner
-        ArrayAdapter<CharSequence> monthAdapter = ArrayAdapter.createFromResource(
-                this, R.array.months_array, android.R.layout.simple_spinner_item);
-        monthAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spnMonth.setAdapter(monthAdapter);
-
-        ArrayAdapter<CharSequence> yearAdapter = ArrayAdapter.createFromResource(
-                this, R.array.years_array, android.R.layout.simple_spinner_item);
-        yearAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spnYear.setAdapter(yearAdapter);
-
-        // --- GẮN SỰ KIỆN KHI CHỌN THÁNG HOẶC NĂM ---
-        AdapterView.OnItemSelectedListener listener = new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                loadSalaryData();
-            }
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) { }
-        };
-
-        spnMonth.setOnItemSelectedListener(listener);
-        spnYear.setOnItemSelectedListener(listener);
-
-        // Tải dữ liệu ban đầu
-        loadSalaryData();
-    }
-
-    // ⚙️ HÀM LẤY DỮ LIỆU TỪ DB
-    @SuppressLint("DefaultLocale")
-    private void loadSalaryData() {
-        String monthStr = spnMonth.getSelectedItem().toString().replaceAll("\\D+", "");
-        String yearStr = spnYear.getSelectedItem().toString();
-
-        // Định dạng tháng thành YYYY-MM để khớp với DB
-        String formattedMonth = String.format("%s-%02d", yearStr, Integer.parseInt(monthStr));
-
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-
-        Cursor cursor = db.rawQuery("SELECT " + DatabaseHelper.TH_NGAYLAM + ", " + DatabaseHelper.TH_LUONG + " FROM " + DatabaseHelper.TABLE_TONGHOP + " WHERE " + DatabaseHelper.TH_MANV + "=? AND " + DatabaseHelper.TH_THANG + "=?",
-                new String[]{String.valueOf(userId), formattedMonth});
-
-        if (cursor.moveToFirst()) {
-            @SuppressLint("Range") int tongNgayLam = cursor.getInt(cursor.getColumnIndex(DatabaseHelper.TH_NGAYLAM));
-            @SuppressLint("Range") double tongLuong = cursor.getDouble(cursor.getColumnIndex(DatabaseHelper.TH_LUONG));
-
-            // Các tính toán khác (có thể thay đổi tùy theo logic của bạn)
-            // Giả sử edtTongSoCa hiển thị tổng ngày làm
-            double gioThuong = tongNgayLam * 8; 
-            double gioTangCa = 0;
-            double luongCaThuong = tongLuong; 
-            double luongTangCa = 0;
-
-            edtTongSoCa.setText(String.valueOf(tongNgayLam));
-            edGioLamThuong.setText(String.format("%.1f", gioThuong));
-            edGioTangCa.setText(String.format("%.1f", gioTangCa));
-            edLuongCaThuong.setText(String.format("%,.0fđ", luongCaThuong));
-            edLuongTangCa.setText(String.format("%,.0fđ", luongTangCa));
-            edTongLuong.setText(String.format("%,.0fđ", tongLuong));
-        } else {
-            Toast.makeText(this, "Không có dữ liệu lương cho tháng đã chọn", Toast.LENGTH_SHORT).show();
-            clearSalaryData();
+        // --- 2. Lấy mã nhân viên từ Intent ---
+        maNhanVien = getIntent().getIntExtra("USER_ID", -1);
+        if (maNhanVien == -1) {
+            Toast.makeText(this, "Lỗi: Không tìm thấy thông tin người dùng.", Toast.LENGTH_LONG).show();
+            finish();
+            return;
         }
-        cursor.close();
+
+        // --- 3. Tính toán lương ---
+        tinhVaHienThiLuong();
     }
 
-    private void clearSalaryData(){
-        edtTongSoCa.setText("0");
-        edGioLamThuong.setText("0");
-        edGioTangCa.setText("0");
-        edLuongCaThuong.setText("0");
-        edLuongTangCa.setText("0");
-        edTongLuong.setText("0");
+    /**
+     * Hàm chính: tính và hiển thị lương.
+     */
+    private void tinhVaHienThiLuong() {
+        // --- Bước 1: Xác định tháng/năm ---
+        int nam = 2025;
+        int thang = 10;
+
+        // Nếu muốn tự động lấy tháng hiện tại, bỏ comment 3 dòng dưới:
+        // Calendar lich = Calendar.getInstance();
+        // int nam = lich.get(Calendar.YEAR);
+        // int thang = lich.get(Calendar.MONTH) + 1;
+
+        tvTieuDeLuong.setText(String.format(Locale.getDefault(), "Tổng hợp lương tháng %d/%d", thang, nam));
+
+        String thangNamChon = String.format(Locale.getDefault(), "%d-%02d", nam, thang);
+
+        // --- Bước 2: Lấy thông tin nhân viên ---
+        Cursor duLieuNV = dbTroGiup.getNhanVienById(maNhanVien);
+        if (duLieuNV == null || !duLieuNV.moveToFirst()) {
+            Toast.makeText(this, "Không thể tìm thấy thông tin nhân viên.", Toast.LENGTH_SHORT).show();
+            if (duLieuNV != null) duLieuNV.close();
+            return;
+        }
+
+        String loaiNV = duLieuNV.getString(duLieuNV.getColumnIndexOrThrow(DatabaseHelper.NV_LOAI));
+        double mucLuong = duLieuNV.getDouble(duLieuNV.getColumnIndexOrThrow(DatabaseHelper.NV_MUCLUONG));
+        duLieuNV.close();
+
+        // --- Bước 3: Lấy dữ liệu chấm công ---
+        Cursor duLieuCaLam = dbTroGiup.getReadableDatabase().rawQuery(
+                "SELECT * FROM CaLam WHERE MANV = ? AND strftime('%Y-%m', Ngay) = ?",
+                new String[]{String.valueOf(maNhanVien), thangNamChon}
+        );
+
+        int tongSoCa = 0;
+        int soLanDiMuon = 0;
+        double tongPhutLamThuong = 0;
+        double tongGioTangCa = 0;
+
+        if (duLieuCaLam != null && duLieuCaLam.moveToFirst()) {
+            tongSoCa = duLieuCaLam.getCount();
+            do {
+                if (duLieuCaLam.getInt(duLieuCaLam.getColumnIndexOrThrow(DatabaseHelper.CL_MUON)) > 0) {
+                    soLanDiMuon++;
+                }
+                tongGioTangCa += duLieuCaLam.getDouble(duLieuCaLam.getColumnIndexOrThrow(DatabaseHelper.CL_OT));
+
+                String gioVao = duLieuCaLam.getString(duLieuCaLam.getColumnIndexOrThrow(DatabaseHelper.CL_CHECKIN));
+                String gioRa = duLieuCaLam.getString(duLieuCaLam.getColumnIndexOrThrow(DatabaseHelper.CL_CHECKOUT));
+
+                if (gioVao != null && gioRa != null) {
+                    tongPhutLamThuong += (chuyenDoiPhut(gioRa) - chuyenDoiPhut(gioVao));
+                }
+            } while (duLieuCaLam.moveToNext());
+        }
+        if (duLieuCaLam != null) duLieuCaLam.close();
+
+        double tongGioLamThuong = tongPhutLamThuong / 60.0;
+
+        // --- Bước 4: Tính lương ---
+        double luongMotGio=mucLuong;
+        double luongThuong;
+        double luongTangCa;
+
+        if ("parttime".equalsIgnoreCase(loaiNV)) {
+            luongThuong = tongGioLamThuong * luongMotGio;
+        } else {
+            luongMotGio = mucLuong / GIO_CHUAN_THANG_FULLTIME;
+            luongThuong = mucLuong;
+        }
+
+        luongTangCa = tongGioTangCa * luongMotGio * HE_SO_TANG_CA;
+        double tienPhat = soLanDiMuon * TIEN_PHAT_DI_MUON;
+        double tongLuong = luongThuong + luongTangCa - tienPhat;
+
+        // --- Bước 5: Hiển thị ---
+        NumberFormat dinhDangTien = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
+
+        edTongSoCa.setText(String.valueOf(tongSoCa));
+        edGioLamThuong.setText(String.format(Locale.US, "%.1f", tongGioLamThuong));
+        edGioTangCa.setText(String.format(Locale.US, "%.1f", tongGioTangCa));
+        edSoLanDiMuon.setText(String.valueOf(soLanDiMuon));
+        edTienPhat.setText(dinhDangTien.format(tienPhat));
+        edLuongCaThuong.setText(dinhDangTien.format(luongThuong));
+        edLuongTangCa.setText(dinhDangTien.format(luongTangCa));
+        edTongLuong.setText(dinhDangTien.format(tongLuong));
+    }
+
+    /**
+     * Chuyển chuỗi "HH:mm" sang tổng số phút.
+     * Ví dụ: "08:30" → 510 phút.
+     */
+    private double chuyenDoiPhut(String thoiGian) {
+        if (thoiGian == null || !thoiGian.contains(":")) {
+            return 0;
+        }
+        try {
+            String[] tach = thoiGian.split(":");
+            int gio = Integer.parseInt(tach[0]);
+            int phut = Integer.parseInt(tach[1]);
+            return gio * 60 + phut;
+        } catch (NumberFormatException e) {
+            return 0;
+        }
     }
 }
