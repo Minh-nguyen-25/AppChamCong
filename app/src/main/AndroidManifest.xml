@@ -34,6 +34,10 @@
         <activity
             android:name=".SalaryActivity"
             android:exported="false" />
+
+        <activity
+            android:name=".WorkScheduleActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

@@ -58,8 +58,16 @@ public class MainActivity extends AppCompatActivity {
         btnCheckOut.setOnClickListener(v -> doCheckOut());
 
         btnRegisterShift.setOnClickListener(v -> startActivity(new Intent(this, RegisterShiftActivity.class)));
-        btnViewShifts.setOnClickListener(v -> startActivity(new Intent(this, WorkScheduleActivity.class)));
-        btnViewSalary.setOnClickListener(v -> startActivity(new Intent(this, SalaryActivity.class)));
+        btnViewShifts.setOnClickListener(v -> {
+            Intent intent = new Intent(this, WorkScheduleActivity.class);
+            intent.putExtra("USER_ID", manv);
+            startActivity(intent);
+                });
+        btnViewSalary.setOnClickListener(v -> {
+            Intent intent = new Intent(this, SalaryActivity.class);
+            intent.putExtra("USER_ID", manv);
+            startActivity(intent);
+        });
     }
 
     private void loadNhanVien() {
