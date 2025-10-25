@@ -17,7 +17,7 @@ import java.util.Locale;
 public class MainActivity extends AppCompatActivity {
 
     TextView tvName, tvBirthday, tvPosition, tvSalary, tvShiftToday;
-    Button btnCheckIn, btnCheckOut, btnRegisterShift, btnViewShifts, btnViewSalary;
+    Button btnCheckIn, btnCheckOut, btnRegisterShift, btnViewShifts, btnViewSalary, btndangxuat;
 
     DatabaseHelper db;
     int manv;
@@ -42,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
         btnRegisterShift = findViewById(R.id.btnRegisterShift);
         btnViewShifts = findViewById(R.id.btnViewShifts);
         btnViewSalary = findViewById(R.id.btnViewSalary);
+        btndangxuat = findViewById(R.id.btndangxuat);
 
         manv = getIntent().getIntExtra("MANV", -1);
         if (manv == -1) {
@@ -67,6 +68,11 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(this, SalaryActivity.class);
             intent.putExtra("USER_ID", manv);
             startActivity(intent);
+        });
+        btndangxuat.setOnClickListener(v -> {
+            Intent intent = new Intent(this, LoginActivity.class);
+            startActivity(intent);
+            finish();
         });
     }
 
