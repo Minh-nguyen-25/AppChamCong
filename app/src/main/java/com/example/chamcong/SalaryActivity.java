@@ -129,7 +129,7 @@ public class SalaryActivity extends AppCompatActivity {
             luongThuong = tongGioLamThuong * luongMotGio;
         } else {
             luongMotGio = mucLuong / GIO_CHUAN_THANG_FULLTIME;
-            luongThuong = mucLuong;
+            luongThuong = tongGioLamThuong * luongMotGio;
         }
 
         luongTangCa = tongGioTangCa * luongMotGio * HE_SO_TANG_CA;
