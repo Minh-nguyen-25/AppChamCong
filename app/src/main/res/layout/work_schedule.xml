@@ -25,53 +25,32 @@
         android:layout_marginBottom="16dp"/>
 
     <!-- Chi tiết ngày -->
-    <LinearLayout
-        android:id="@+id/layoutWorkDetail"
+    <TextView
+        android:id="@+id/tvSelectedDate"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="12dp"
-        android:background="@drawable/day_background"
-        android:layout_marginBottom="20dp">
+        android:text="Chi tiết cho ngày:"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_primary"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:paddingBottom="8dp"/>
+        
+    <!-- Vùng chứa danh sách các ca làm (có thể cuộn) -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
-        <TextView
-            android:id="@+id/tvDate"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:id="@+id/shifts_container"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Ngày: "
-            android:textStyle="bold"
-            android:textSize="16sp"
-            android:textColor="@color/text_primary"
-            android:layout_marginBottom="8dp"/>
+            android:orientation="vertical"
+            android:animateLayoutChanges="true">
 
-        <TextView
-            android:id="@+id/tvCheckIn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Check-in: "/>
+             <!-- Các ca làm sẽ được thêm vào đây bằng code -->
 
-        <TextView
-            android:id="@+id/tvCheckOut"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Check-out: "/>
-
-        <TextView
-            android:id="@+id/tvShift"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Ca làm: "/>
-
-        <TextView
-            android:id="@+id/tvTotalHours"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Số giờ làm: "/>
-
-        <TextView
-            android:id="@+id/tvOvertimeHoursDay"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Giờ tăng ca: "/>
-    </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
 </LinearLayout>
