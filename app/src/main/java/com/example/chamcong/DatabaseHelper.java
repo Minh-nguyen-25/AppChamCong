@@ -17,7 +17,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     // --- THÔNG TIN DB ---
     // ⭐ TĂNG VERSION ĐỂ KÍCH HOẠT onUpgrade, TẠO LẠI DỮ LIỆU
     private static final String DATABASE_NAME = "ChamCong.db";
-    private static final int DATABASE_VERSION = 12; // tăng lên để onUpgrade chạy nếu cần
+    private static final int DATABASE_VERSION = 13; // tăng lên để onUpgrade chạy nếu cần
 
     // --- BẢNG NHÂN VIÊN ---
     public static final String TABLE_NHANVIEN = "NhanVien";
@@ -182,9 +182,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     // Lấy CaLam cho 1 nhân viên vào 1 ngày (yyyy-MM-dd). Trả Cursor (có thể nhiều row, nhưng normal là 1)
     public Cursor getCaLamForDate(int manv, String date) {
         SQLiteDatabase db = this.getReadableDatabase();
+        String orderBy = "CASE " + CL_CA +
+                " WHEN '8h30-13h' THEN 1 " +
+                " WHEN '13h-17h30' THEN 2 " +
+                " WHEN '17h30-22h' THEN 3 " +
+                " ELSE 4 END ASC";
         return db.query(TABLE_CALAM, null, CL_MANV + "=? AND " + CL_NGAY + "=?", new String[]{
                 String.valueOf(manv), date
-        }, null, null, null);
+        }, null, null, orderBy);
     }
 
     // 🟢 LẤY TẤT CẢ CA LÀM TRONG THÁNG (dùng cho màn hình lương / lịch làm việc)

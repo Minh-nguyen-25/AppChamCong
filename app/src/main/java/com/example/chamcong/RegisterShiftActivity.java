@@ -30,7 +30,7 @@ public class RegisterShiftActivity extends AppCompatActivity {
     private SimpleDateFormat sdfDB = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
 
     DatabaseHelper db;
-    int manv = 1; // 👈 tạm set cứng - sau lấy từ đăng nhập
+    int manv = 1 ; // 👈 tạm set cứng - sau lấy từ đăng nhập
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +49,7 @@ public class RegisterShiftActivity extends AppCompatActivity {
         btnRegisterOT = findViewById(R.id.btnRegisterOT);
 
         layoutShift.setVisibility(View.GONE);
+
 
         calendarView.setOnDateChangeListener((view, year, month, dayOfMonth) -> {
 
