@@ -64,14 +64,10 @@ public class SalaryActivity extends AppCompatActivity {
      * Hàm chính: tính và hiển thị lương.
      */
     private void tinhVaHienThiLuong() {
-        // --- Bước 1: Xác định tháng/năm ---
-        int nam = 2025;
-        int thang = 10;
+        Calendar lich = Calendar.getInstance(); // Lấy thời gian hiện tại
+        int nam = lich.get(Calendar.YEAR);      // Lấy năm hiện tại
+        int thang = lich.get(Calendar.MONTH) + 1; // Lấy tháng hiện tại (lưu ý: tháng bắt đầu từ 0)
 
-        // Nếu muốn tự động lấy tháng hiện tại, bỏ comment 3 dòng dưới:
-        // Calendar lich = Calendar.getInstance();
-        // int nam = lich.get(Calendar.YEAR);
-        // int thang = lich.get(Calendar.MONTH) + 1;
 
         tvTieuDeLuong.setText(String.format(Locale.getDefault(), "Tổng hợp lương tháng %d/%d", thang, nam));
 
