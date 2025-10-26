@@ -1,9 +1,7 @@
 package com.example.chamcong;
 
-import android.app.AlertDialog;
 import android.content.Intent;
 import android.database.Cursor;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.TextView;
@@ -56,6 +54,7 @@ public class MainActivity extends AppCompatActivity {
 
         loadNhanVien();
         loadCaHomNay();
+        loadHistory(); // hiển thị lịch sử hôm nay
 
         btnCheckIn.setOnClickListener(v -> doCheckIn());
         btnCheckOut.setOnClickListener(v -> doCheckOut());
@@ -65,16 +64,16 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(this, WorkScheduleActivity.class);
             intent.putExtra("USER_ID", manv);
             startActivity(intent);
-                });
+        });
         btnViewSalary.setOnClickListener(v -> {
             Intent intent = new Intent(this, SalaryActivity.class);
             intent.putExtra("USER_ID", manv);
             startActivity(intent);
         });
         btndangxuat.setOnClickListener(v -> {
-           Intent intent = new Intent(this, LoginActivity.class);
-           startActivity(intent);
-           finish();
+            Intent intent = new Intent(this, LoginActivity.class);
+            startActivity(intent);
+            finish();
         });
     }
 
@@ -99,14 +98,21 @@ public class MainActivity extends AppCompatActivity {
     private void loadCaHomNay() {
         String today = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
         Cursor c = db.getCaLamForDate(manv, today);
+        todayCaId = -1;
+        todayCaString = null;
+
         if (c != null && c.moveToFirst()) {
+            // lấy row đầu tiên (thường sẽ chỉ có 1 ca cho 1 nhân viên 1 ngày)
             todayCaId = c.getInt(c.getColumnIndexOrThrow(DatabaseHelper.CL_ID));
             todayCaString = c.getString(c.getColumnIndexOrThrow(DatabaseHelper.CL_CA));
             String checkIn = c.getString(c.getColumnIndexOrThrow(DatabaseHelper.CL_CHECKIN));
             String checkOut = c.getString(c.getColumnIndexOrThrow(DatabaseHelper.CL_CHECKOUT));
-            tvShiftToday.setText("Ca hôm nay: " + todayCaString +
-                    (checkIn != null ? "\n(Đã check-in: " + checkIn + ")" : "") +
-                    (checkOut != null ? "\n(Đã check-out: " + checkOut + ")" : ""));
+
+            String base = "Ca hôm nay: " + todayCaString;
+            if (checkIn != null) base += "\n(Đã check-in: " + checkIn + ")";
+            if (checkOut != null) base += "\n(Đã check-out: " + checkOut + ")";
+            tvShiftToday.setText(base);
+
             c.close();
         } else {
             tvShiftToday.setText("Hôm nay chưa đăng ký ca");
@@ -125,10 +131,15 @@ public class MainActivity extends AppCompatActivity {
         }
 
         String time = nowHHmm();
+        // Cập nhật trường checkIn trong CaLam (vẫn lưu latest vào CaLam)
         db.updateCheckInTime(todayCaId, time);
+        // Lưu lịch sử (mỗi lần bấm sẽ lưu 1 record)
+        db.saveCheckHistory(manv, "in", time);
 
         loadCaHomNay();
+        loadHistory();
 
+        // show thông báo: lấy phút muộn từ bảng CaLam
         Cursor c = db.getCaLamForDate(manv, new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date()));
         if (c != null && c.moveToFirst()) {
             int muon = c.getInt(c.getColumnIndexOrThrow(DatabaseHelper.CL_MUON));
@@ -148,9 +159,13 @@ public class MainActivity extends AppCompatActivity {
         }
 
         String time = nowHHmm();
+        // Cập nhật trường checkOut trong CaLam
         db.updateCheckOutTime(todayCaId, time);
+        // Lưu lịch sử
+        db.saveCheckHistory(manv, "out", time);
 
         loadCaHomNay();
+        loadHistory();
 
         Cursor c = db.getCaLamForDate(manv, new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date()));
         if (c != null && c.moveToFirst()) {
@@ -162,5 +177,34 @@ public class MainActivity extends AppCompatActivity {
             }
             c.close();
         }
+    }
+
+    // Hiển thị lịch sử check-in/out của hôm nay (chỉ hôm nay)
+    private void loadHistory() {
+        Cursor h = db.getTodayHistory(manv);
+        StringBuilder sb = new StringBuilder();
+
+        // Hiện phần thông tin ca hiện tại (nếu có)
+        if (todayCaString != null) {
+            sb.append("Ca hôm nay: ").append(todayCaString).append("\n");
+        } else {
+            sb.append("Hôm nay chưa đăng ký ca\n");
+        }
+
+        // Thêm phần lịch sử
+        sb.append("Lịch sử hôm nay:\n");
+        if (h != null && h.moveToFirst()) {
+            do {
+                String loai = h.getString(h.getColumnIndexOrThrow(DatabaseHelper.CH_LOAI));
+                String gio = h.getString(h.getColumnIndexOrThrow(DatabaseHelper.CH_GIO));
+                String label = loai.equals("in") ? "Check-in" : "Check-out";
+                sb.append(label).append(" lúc ").append(gio).append("\n");
+            } while (h.moveToNext());
+            h.close();
+        } else {
+            if (h != null) h.close();
+        }
+
+        tvShiftToday.setText(sb.toString());
     }
 }
