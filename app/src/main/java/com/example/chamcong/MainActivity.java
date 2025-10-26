@@ -1,7 +1,9 @@
 package com.example.chamcong;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.TextView;
@@ -70,9 +72,9 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         });
         btndangxuat.setOnClickListener(v -> {
-            Intent intent = new Intent(this, LoginActivity.class);
-            startActivity(intent);
-            finish();
+           Intent intent = new Intent(this, LoginActivity.class);
+           startActivity(intent);
+           finish();
         });
     }
 
