@@ -43,7 +43,10 @@
                 android:layout_weight="2"
                 android:text="0"
                 android:inputType="numberDecimal"
-                android:background="@drawable/day_background" />
+                android:background="@drawable/day_background"
+                android:cursorVisible="false"
+                android:longClickable="false"
+                />
         </LinearLayout>
 
         <!-- Giờ làm thường -->
@@ -68,7 +71,10 @@
                 android:layout_weight="2"
                 android:text="0"
                 android:inputType="numberDecimal"
-                android:background="@drawable/day_background" />
+                android:background="@drawable/day_background"
+                android:cursorVisible="false"
+                android:longClickable="false"
+                />
         </LinearLayout>
 
         <!-- Giờ tăng ca -->
@@ -93,7 +99,10 @@
                 android:layout_weight="2"
                 android:text="0"
                 android:inputType="numberDecimal"
-                android:background="@drawable/day_background" />
+                android:background="@drawable/day_background"
+                android:cursorVisible="false"
+                android:longClickable="false"
+                />
         </LinearLayout>
 
         <!-- Số lần đi muộn -->
@@ -118,7 +127,10 @@
                 android:layout_weight="2"
                 android:text="0"
                 android:inputType="number"
-                android:background="@drawable/day_background" />
+                android:background="@drawable/day_background"
+                android:cursorVisible="false"
+                android:longClickable="false"
+                />
         </LinearLayout>
 
         <!-- Tiền phạt đi muộn -->
@@ -143,7 +155,10 @@
                 android:layout_weight="2"
                 android:text="0"
                 android:inputType="numberDecimal"
-                android:background="@drawable/day_background" />
+                android:background="@drawable/day_background"
+                android:cursorVisible="false"
+                android:longClickable="false"
+                />
         </LinearLayout>
 
         <!-- Lương ca thường -->
@@ -168,7 +183,10 @@
                 android:layout_weight="2"
                 android:text="0"
                 android:inputType="numberDecimal"
-                android:background="@drawable/day_background" />
+                android:background="@drawable/day_background"
+                android:cursorVisible="false"
+                android:longClickable="false"
+                />
         </LinearLayout>
 
         <!-- Lương tăng ca -->
@@ -193,7 +211,10 @@
                 android:layout_weight="2"
                 android:text="0"
                 android:inputType="numberDecimal"
-                android:background="@drawable/day_background" />
+                android:background="@drawable/day_background"
+                android:cursorVisible="false"
+                android:longClickable="false"
+                />
         </LinearLayout>
 
         <!-- Tổng lương sau khi trừ phạt -->
@@ -219,7 +240,10 @@
                 android:layout_weight="2"
                 android:text="0"
                 android:inputType="numberDecimal"
-                android:background="@drawable/day_background" />
+                android:background="@drawable/day_background"
+                android:cursorVisible="false"
+                android:longClickable="false"
+                />
         </LinearLayout>
 
     </LinearLayout>
