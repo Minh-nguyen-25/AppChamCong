@@ -36,8 +36,7 @@
         android:paddingStart="12dp"
         android:paddingEnd="12dp"
         android:paddingBottom="8dp"/>
-        
-    <!-- Vùng chứa danh sách các ca làm (có thể cuộn) -->
+
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
@@ -48,8 +47,6 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:animateLayoutChanges="true">
-
-             <!-- Các ca làm sẽ được thêm vào đây bằng code -->
 
         </LinearLayout>
     </ScrollView>
